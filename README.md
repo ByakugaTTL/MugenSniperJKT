@@ -42,7 +42,7 @@ MugenSniper can also work with just one ID or one cookie.
 
 ## Contributing
 
-If you would like to contribute to MugenSniper, please submit a pull request or join our Discord server to discuss potential changes.
+If you would like to contribute to MugenSniper, please submit a pull request or join our For more information and support, join our [Discord server](https://discord.gg/Fkh9JMj9N6).
 
 ## License
 
