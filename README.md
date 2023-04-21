@@ -1,5 +1,6 @@
-# MugenSniperJKT
-MugenSniper is a powerful tool designed to quickly and efficiently snipe valuable UGC on the Roblox platform. It supports multiple IDs and cookies, automatically manages rate limits, and has a customizable delay. With its user-friendly interface and robust error handling, MugenSniper makes sniping UGC's on Roblox easy and efficient.
+# MugenSniper
+
+MugenSniper is a powerful user-generated content (UGC) Limited sniper tool that can quickly and efficiently snipe valuable usernames on the Roblox platform. MugenSniper is currently only available for Windows and is under testing.
 
 ## Features
 
@@ -42,7 +43,7 @@ MugenSniper can also work with just one ID or one cookie.
 
 ## Contributing
 
-If you would like to contribute to MugenSniper, please submit a pull request or join our For more information and support, join our [Discord server](https://discord.gg/Fkh9JMj9N6).
+If you would like to contribute to MugenSniper, please submit a pull request or join our Discord server to discuss potential changes.
 
 ## License
 
