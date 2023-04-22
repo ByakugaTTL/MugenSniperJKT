@@ -4,6 +4,7 @@ from asyncio import Semaphore
 import colorsys
 from tqdm import tqdm
 import json
+import re
 import ujson
 import time
 import os
@@ -21,9 +22,6 @@ import sys
 import tkinter as tk
 from PIL import ImageTk, Image
 import urllib.request
-
-
-# Add your widgets and functions here
 
 ctypes.windll.kernel32.SetConsoleTitleW("Mugen Sniper [<>]")
 # Get a handle to the console buffer
@@ -101,21 +99,25 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
             time.sleep(0.01)
 
         timestamp_input = input()
-
         if timestamp_input.lower() == 'skip':
             for char in f"V: {yellow}{self.version}{end} - {yellow}{self.title}{end} - {magenta}Skipping wait and starting snipe process immediately\n":
                 sys.stdout.write(char)
                 sys.stdout.flush()
-                time.sleep(0.01)
+                time.sleep(0.00)
         else:
-            target_time = datetime.strptime(timestamp_input, '%I:%M%p').time()
-            current_time = datetime.now().time()
-            while current_time < target_time:
+            if re.match(r'^\d{1,2}:\d{2}[ap]m$', timestamp_input.lower()):
+                target_time = datetime.strptime(timestamp_input, '%I:%M%p').time()
                 current_time = datetime.now().time()
-                for char in f"V: {yellow}{self.version}{end} - {yellow}Mugen{end} - {magenta}Waiting for snipe process to begin at {yellow}{target_time.strftime('%I:%M %p')}\n":
-                    sys.stdout.write(char)
-                    sys.stdout.flush()
-                    time.sleep(0.0000001)
+                while current_time < target_time:
+                    current_time = datetime.now().time()
+                    for char in f"V: {yellow}{self.version}{end} - {yellow}Mugen{end} - {magenta}Waiting for snipe process to begin at {yellow}{target_time.strftime('%I:%M %p')}\n":
+                        sys.stdout.write(char)
+                        sys.stdout.flush()
+                        time.sleep(0.01)
+            else:
+                print(f"Invalid timestamp format. Please enter the timestamp in the format '%I:%M%p'.")
+
+
 
         asyncio.run(self.start())
 
@@ -245,8 +247,7 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
                 await asyncio.sleep(5)
      
     async def buy_item(self, item_id: int, price: int, user_id: int, creator_id: int, product_id: int, cookie: str, x_token: str) -> None:
-        """ Purchase a limited item on Roblox.
-        """
+        """ Purchase a limited item on Roblox. """
         data = {
             "collectibleItemId": item_id,
             "expectedCurrency": 1,
@@ -259,7 +260,7 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
             "collectibleProductId": product_id
         }
         total_errors = 0
-        async with aiohttp.ClientSession(connector=TCPConnector) as client:
+        async with aiohttp.ClientSession() as client:
             while True:
                 if total_errors >= 10:
                     print("Too many errors encountered. Aborting purchase.")
@@ -270,6 +271,8 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
                 except aiohttp.ClientConnectorError as e:
                     self.errors += 1
                     print(f"Connection error encountered: {e}. Retrying purchase...")
+                    with open('log.txt', 'a') as f:
+                        f.write(f"Connection error encountered: {e}\n")
                     total_errors += 1
                     continue
                 if response.status == 429:
@@ -281,11 +284,15 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
                 except aiohttp.ContentTypeError as e:
                     self.errors += 1
                     print(f"JSON decode error encountered: {e}. Retrying purchase...")
+                    with open('log.txt', 'a') as f:
+                        f.write(f"JSON decode error encountered: {e}\n")
                     total_errors += 1
                     continue
                 if not json_response["purchased"]:
                     self.errors += 1
                     print(f"Purchase failed. Response: {json_response}. Retrying purchase...")
+                    with open('log.txt', 'a') as f:
+                        f.write(f"Purchase failed. Response: {json_response}\n")
                     total_errors += 1
                 else:
                     print(f"Purchase successful. Response: {json_response}.")
@@ -308,7 +315,7 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
 
     async def auto_search(self) -> None:
         self.scraped_ids = set()
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=None)) as session:
+        async with aiohttp.ClientSession() as session:
             pbar = tqdm(total=100, bar_format=Fore.YELLOW + "{l_bar}{bar}" + Style.RESET_ALL + "|{n_fmt}/{total_fmt} [{elapsed}<{remaining}]")
             while True:
                 try:
@@ -342,7 +349,7 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
                     await asyncio.sleep(5)
 
     async def given_id_sniper(self) -> None:
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=None)) as session:
+        async with aiohttp.ClientSession() as session:
             while True:
                 try:
                     self.task = "Item Sniper"
@@ -352,7 +359,7 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
                         tasks = [asyncio.wrap_future(asyncio.run_coroutine_threadsafe(self.process_item(session, currentItem), loop)) for currentItem in self.items]
                         await asyncio.gather(*tasks)
                     t1 = asyncio.get_event_loop().time()
-                    self.last_time = round(t1 - t0, 3)
+                    self.last_time = round(t1 - t0, 6)
                 except aiohttp.ClientConnectorError as e:
                     print(f'Connection error: {e}')
                     self.errors += 1
@@ -366,7 +373,7 @@ $$ | \_/ $$ \$$$$$$  \$$$$$$$ \$$$$$$$\$$ |  $$ |
                     print(f"Response Error: {e}")
                 finally:
                     self.checks += 1
-                await asyncio.sleep(1)
+                    await asyncio.sleep(1)
 
     
     async def process_item(self, session, currentItem):
